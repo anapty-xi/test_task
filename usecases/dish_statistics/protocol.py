@@ -1,8 +1,12 @@
 from typing import Protocol
 
-from entities.dish_statistics import DishStatistics
-from entities.report import Report
+from entities.base import CategoryStatistic, DishMargin
 
 
 class DishStatisticProtocol(Protocol):
-    async def analyze(self, dishes_stats: list[DishStatistics]) -> Report: ...
+    async def generate_suggestions(
+        self,
+        top_margin: list[DishMargin],
+        loss_making: list[DishMargin],
+        by_category: dict[str, CategoryStatistic],
+    ) -> list[str]: ...
