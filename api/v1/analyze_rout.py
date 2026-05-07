@@ -4,6 +4,7 @@ from fastapi import APIRouter, Body, Depends
 
 from api.dependencies import analyze_usecase
 from api.serializers import DishStatisticsInput, ReportDTO
+from entities.dish_statistics import DishStatistics
 from usecases.dish_statistics.usecases import Analyze
 
 router = APIRouter(prefix="/analyze_sales", tags=["analyze"])
@@ -34,5 +35,8 @@ async def analyze_sales(
     3. Aggregate data by categories.
     4. Generate business insights through the infrastructure layer.
     """
-    report = await usecase.execute(dishes_stats.sales)
+    dishes_stats_entities = [
+        DishStatistics.model_validate(d) for d in dishes_stats.sales
+    ]
+    report = await usecase.execute(dishes_stats_entities)
     return ReportDTO.model_validate(report)

@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DishStatistics(BaseModel):
@@ -11,6 +11,8 @@ class DishStatistics(BaseModel):
     Contains pricing and quantity information, with built-in methods
     to calculate revenue, total cost, and margin at the unit level.
     """
+
+    model_config = ConfigDict(from_attributes=True)
 
     dish_id: Annotated[int, Field(ge=1)]
     dish_name: str
