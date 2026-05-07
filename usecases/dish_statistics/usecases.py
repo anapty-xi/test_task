@@ -1,4 +1,5 @@
 from collections import defaultdict
+from decimal import Decimal
 
 from entities.base import CategoryStatistic, DishMargin
 from entities.dish_statistics import DishStatistics
@@ -7,13 +8,31 @@ from usecases.dish_statistics.protocol import DishStatisticProtocol
 
 
 class Analyze:
+    """
+    Business logic interactor for analyzing sales performance.
+
+    Coordinates the calculation of global financial metrics, categorizes items
+    based on profitability thresholds, aggregates statistics by category,
+    and fetches business recommendations via the infrastructure layer.
+    """
+
     def __init__(self, inf: DishStatisticProtocol):
         self.inf = inf
 
     async def execute(self, dishes_stats: list[DishStatistics]) -> Report:
-        total_revenue = sum(d.revenue() for d in dishes_stats)
-        total_margin = sum(d.margin() for d in dishes_stats)
-        margin_percent = total_margin / total_revenue * 100 if total_revenue else 0
+        """
+        Orchestrates the full analysis process for a given list of sales data.
+
+        :param dishes_stats: A list of dish-level sales statistics.
+        :return: A comprehensive Report entity containing calculated insights.
+        """
+        total_revenue = sum((d.revenue() for d in dishes_stats), Decimal("0"))
+        total_margin = sum((d.margin() for d in dishes_stats), Decimal("0"))
+        margin_percent = (
+            (total_margin / total_revenue * 100).quantize(Decimal("0.01"))
+            if total_revenue
+            else Decimal(0)
+        )
 
         dishes_stats = sorted(
             dishes_stats, key=lambda x: x.margin_percent(), reverse=True
@@ -40,6 +59,13 @@ class Analyze:
     def _top_loss_margin(
         dishes_stats: list[DishStatistics],
     ) -> tuple[list[DishMargin], list[DishMargin]]:
+        """
+        Splits dishes into high-margin (top) and low-margin (loss-making) groups.
+        A dish is categorized as 'top-margin' if its profitability is 30% or higher.
+
+        :param dishes_stats: A list of dish-level sales statistics.
+        :return: tuple contains top margin dishes[0] and loss making dishes[1]
+        """
         top_margin_dishes = []
         loss_making = []
 
@@ -58,6 +84,13 @@ class Analyze:
     def _by_category(
         dishes_stats: list[DishStatistics],
     ) -> dict[str, CategoryStatistic]:
+        """
+        Groups sales data by category and calculates aggregate statistics for each.
+
+        :param dishes_stats: A list of dish-level sales statistics.
+        :return: Dict, keys - categories, values - category
+        statistics(revenue, margin, margin percent)
+        """
         category_map = defaultdict(list)
 
         for dish in dishes_stats:
@@ -65,9 +98,13 @@ class Analyze:
 
         by_category = {}
         for cat, dishes in category_map.items():
-            revenue = sum(d.revenue() for d in dishes)
-            margin = sum(d.margin() for d in dishes)
-            margin_percent = margin / revenue * 100 if revenue else 0
+            revenue = sum((d.revenue() for d in dishes), Decimal("0"))
+            margin = sum((d.margin() for d in dishes), Decimal("0"))
+            margin_percent = (
+                (margin / revenue * 100).quantize(Decimal("0.01"))
+                if revenue
+                else Decimal(0)
+            )
 
             by_category[cat] = CategoryStatistic(
                 revenue=revenue, margin=margin, margin_percent=margin_percent
