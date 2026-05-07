@@ -19,7 +19,7 @@ class DishStatistics(BaseModel):
         return self.cost_price * self.quantity
 
     def margin(self) -> Decimal:
-        return self.revenue() - self.total_cost()
+        return (self.selling_price - self.cost_price) * self.quantity
 
     def margin_percent(self) -> Decimal:
         return self.margin() / self.revenue() * 100
