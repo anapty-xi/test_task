@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DishStatisticsDTO(BaseModel):
@@ -44,6 +44,8 @@ class DishStatisticsInput(BaseModel):
 
 
 class DishMarginDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     dish_name: str = Field(
         description="Official name of the dish from the menu", examples=["Cheeseburger"]
     )
@@ -58,6 +60,8 @@ class DishMarginDTO(BaseModel):
 
 
 class CategoryStatisticDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     revenue: Annotated[
         Decimal,
         Field(
@@ -85,6 +89,8 @@ class CategoryStatisticDTO(BaseModel):
 
 
 class ReportDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     total_revenue: Annotated[
         Decimal,
         Field(
